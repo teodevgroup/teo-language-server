@@ -32,7 +32,7 @@ function startServer(options) {
             capabilities.textDocument.publishDiagnostics.relatedInformation);
         const result = {
             capabilities: {
-                textDocumentSync: vscode_languageserver_1.TextDocumentSyncKind.Incremental,
+                textDocumentSync: vscode_languageserver_1.TextDocumentSyncKind.Full,
                 //definitionProvider: true,
                 //documentFormattingProvider: true,
                 //completionProvider: {
@@ -83,6 +83,10 @@ function startServer(options) {
     documents.onDidClose((e) => {
         documentSettings.delete(e.document.uri);
     });
+    documents.onDidChangeContent((change) => {
+        console.log("DID CHANGED CONTENT: " + change.document.uri);
+        validateTextDocumentAndSendDiagnostics(change.document);
+    });
     // Note: VS Code strips newline characters from the message
     function showErrorToast(errorMessage) {
         connection.window.showErrorMessage(errorMessage);
@@ -91,9 +95,6 @@ function startServer(options) {
         const diagnostics = (0, wasm_1.validateTextDocument)(textDocument);
         connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
     }
-    documents.onDidChangeContent((change) => {
-        (0, wasm_1.validateTextDocument)(change.document);
-    });
     function getDocument(uri) {
         return documents.get(uri);
     }

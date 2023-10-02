@@ -5,7 +5,9 @@ const teo_language_server_wasm_1 = require("teo-language-server-wasm");
 const vscode_languageserver_1 = require("vscode-languageserver");
 function validateTextDocument(document) {
     const sanitizedUri = document.uri.replace('file://', '');
-    const linterStringResult = (0, teo_language_server_wasm_1.lint)(sanitizedUri);
+    const linterStringResult = (0, teo_language_server_wasm_1.lint)(sanitizedUri, {
+        [sanitizedUri]: document.getText()
+    });
     const linterResult = JSON.parse(linterStringResult);
     return linterResult.filter((result) => {
         return result.source == sanitizedUri;

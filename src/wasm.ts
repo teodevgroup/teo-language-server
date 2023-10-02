@@ -28,7 +28,9 @@ export function validateTextDocument(
     document: TextDocument,
 ): Diagnostic[] {
     const sanitizedUri = document.uri.replace('file://', '')
-    const linterStringResult = lint(sanitizedUri)
+    const linterStringResult = lint(sanitizedUri, {
+        [sanitizedUri]: document.getText()
+    })
     const linterResult: TeoParserDiagnosticsItem[] = JSON.parse(linterStringResult)
     return linterResult.filter((result) => {
         return result.source == sanitizedUri

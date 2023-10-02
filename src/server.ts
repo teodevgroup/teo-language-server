@@ -62,7 +62,7 @@ export function startServer(options?: LSOptions): void {
 
         const result: InitializeResult = {
             capabilities: {
-                textDocumentSync: TextDocumentSyncKind.Incremental,
+                textDocumentSync: TextDocumentSyncKind.Full,
                 //definitionProvider: true,
                 //documentFormattingProvider: true,
                 //completionProvider: {
@@ -120,6 +120,10 @@ export function startServer(options?: LSOptions): void {
     documents.onDidClose((e) => {
         documentSettings.delete(e.document.uri)
     })
+
+    documents.onDidChangeContent((change: { document: TextDocument }) => {
+        validateTextDocumentAndSendDiagnostics(change.document)
+    })
     
     // Note: VS Code strips newline characters from the message
     function showErrorToast(errorMessage: string): void {
@@ -130,10 +134,6 @@ export function startServer(options?: LSOptions): void {
         const diagnostics: Diagnostic[] = validateTextDocument(textDocument)
         connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
     }
-    
-    documents.onDidChangeContent((change: { document: TextDocument }) => {
-        validateTextDocument(change.document)
-    })
     
     function getDocument(uri: string): TextDocument | undefined {
         return documents.get(uri)
