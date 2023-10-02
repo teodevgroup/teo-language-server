@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateTextDocument = void 0;
-const teo_language_server_wasm_1 = require("teo-language-server-wasm");
+const teo_language_server_wasm_1 = require("@teocloud/teo-language-server-wasm");
 const vscode_languageserver_1 = require("vscode-languageserver");
 function validateTextDocument(document, documents) {
     const unsavedFiles = {};

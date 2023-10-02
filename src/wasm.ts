@@ -1,4 +1,4 @@
-import { lint } from 'teo-language-server-wasm'
+import { lint } from '@teocloud/teo-language-server-wasm'
 import {
     DocumentFormattingParams,
     TextEdit,
