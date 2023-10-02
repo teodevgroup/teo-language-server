@@ -20,7 +20,7 @@ import {
 import { createConnection, IPCMessageReader, IPCMessageWriter } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { LSOptions, LSSettings } from './settings'
-import { handleDiagnosticsRequest } from './wasm'
+import { validateTextDocument } from './wasm'
 
 /**
 * Starts the language server.
@@ -63,15 +63,15 @@ export function startServer(options?: LSOptions): void {
         const result: InitializeResult = {
             capabilities: {
                 textDocumentSync: TextDocumentSyncKind.Incremental,
-                definitionProvider: true,
-                documentFormattingProvider: true,
-                completionProvider: {
-                    resolveProvider: true,
-                    triggerCharacters: ['@', '"', '.'],
-                },
-                hoverProvider: true,
-                renameProvider: true,
-                documentSymbolProvider: true,
+                //definitionProvider: true,
+                //documentFormattingProvider: true,
+                //completionProvider: {
+                //    resolveProvider: true,
+                //    triggerCharacters: ['@', '"', '.'],
+                //},
+                //hoverProvider: true,
+                //renameProvider: true,
+                //documentSymbolProvider: true,
             },
         }
     
@@ -113,7 +113,7 @@ export function startServer(options?: LSOptions): void {
         }
         
         // Revalidate all open teo schemas
-        documents.all().forEach(validateTextDocument) // eslint-disable-line @typescript-eslint/no-misused-promises
+        documents.all().forEach(validateTextDocumentAndSendDiagnostics) // eslint-disable-line @typescript-eslint/no-misused-promises
     })
     
     // Only keep settings for open documents
@@ -126,8 +126,8 @@ export function startServer(options?: LSOptions): void {
         connection.window.showErrorMessage(errorMessage)
     }
     
-    function validateTextDocument(textDocument: TextDocument) {
-        const diagnostics: Diagnostic[] = handleDiagnosticsRequest(textDocument)
+    function validateTextDocumentAndSendDiagnostics(textDocument: TextDocument) {
+        const diagnostics: Diagnostic[] = validateTextDocument(textDocument)
         connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
     }
     

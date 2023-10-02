@@ -33,15 +33,15 @@ function startServer(options) {
         const result = {
             capabilities: {
                 textDocumentSync: vscode_languageserver_1.TextDocumentSyncKind.Incremental,
-                definitionProvider: true,
-                documentFormattingProvider: true,
-                completionProvider: {
-                    resolveProvider: true,
-                    triggerCharacters: ['@', '"', '.'],
-                },
-                hoverProvider: true,
-                renameProvider: true,
-                documentSymbolProvider: true,
+                //definitionProvider: true,
+                //documentFormattingProvider: true,
+                //completionProvider: {
+                //    resolveProvider: true,
+                //    triggerCharacters: ['@', '"', '.'],
+                //},
+                //hoverProvider: true,
+                //renameProvider: true,
+                //documentSymbolProvider: true,
             },
         };
         if (hasWorkspaceFolderCapability) {
@@ -77,7 +77,7 @@ function startServer(options) {
             documentSettings.clear();
         }
         // Revalidate all open teo schemas
-        documents.all().forEach(validateTextDocument); // eslint-disable-line @typescript-eslint/no-misused-promises
+        documents.all().forEach(validateTextDocumentAndSendDiagnostics); // eslint-disable-line @typescript-eslint/no-misused-promises
     });
     // Only keep settings for open documents
     documents.onDidClose((e) => {
@@ -87,12 +87,12 @@ function startServer(options) {
     function showErrorToast(errorMessage) {
         connection.window.showErrorMessage(errorMessage);
     }
-    function validateTextDocument(textDocument) {
-        const diagnostics = (0, wasm_1.handleDiagnosticsRequest)(textDocument);
+    function validateTextDocumentAndSendDiagnostics(textDocument) {
+        const diagnostics = (0, wasm_1.validateTextDocument)(textDocument);
         connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
     }
     documents.onDidChangeContent((change) => {
-        validateTextDocument(change.document);
+        (0, wasm_1.validateTextDocument)(change.document);
     });
     function getDocument(uri) {
         return documents.get(uri);

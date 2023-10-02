@@ -24,19 +24,19 @@ import {
 } from 'vscode-languageserver'
 import type { TextDocument } from 'vscode-languageserver-textdocument'
 
-export function handleDiagnosticsRequest(
+export function validateTextDocument(
     document: TextDocument,
 ): Diagnostic[] {
-    console.log("see document uri: " + document.uri)
-    const linterStringResult = lint(document.uri)
+    const sanitizedUri = document.uri.replace('file://', '')
+    const linterStringResult = lint(sanitizedUri)
     const linterResult: TeoParserDiagnosticsItem[] = JSON.parse(linterStringResult)
     return linterResult.filter((result) => {
-        return result.source == document.uri
+        return result.source == sanitizedUri
     }).map((result) => {
         return Diagnostic.create(
             Range.create(
-                Position.create(result.span.start_position[0], result.span.start_position[1]),
-                Position.create(result.span.end_position[0], result.span.end_position[1]),
+                Position.create(result.span.start_position[0] - 1, result.span.start_position[1] - 1),
+                Position.create(result.span.end_position[0] - 1, result.span.end_position[1] - 1),
             ),
             result.message
         )
