@@ -26,11 +26,14 @@ import type { TextDocument } from 'vscode-languageserver-textdocument'
 
 export function validateTextDocument(
     document: TextDocument,
+    documents: TextDocument[],
 ): Diagnostic[] {
-    const sanitizedUri = document.uri.replace('file://', '')
-    const linterStringResult = lint(sanitizedUri, {
-        [sanitizedUri]: document.getText()
+    const unsavedFiles: {[key: string]: string} = {};
+    documents.map((document) => {
+        unsavedFiles[document.uri.replace('file://', '')] = document.getText()
     })
+    const sanitizedUri = document.uri.replace('file://', '')
+    const linterStringResult = lint(sanitizedUri, unsavedFiles)
     const linterResult: TeoParserDiagnosticsItem[] = JSON.parse(linterStringResult)
     return linterResult.filter((result) => {
         return result.source == sanitizedUri
@@ -40,7 +43,8 @@ export function validateTextDocument(
                 Position.create(result.span.start_position[0] - 1, result.span.start_position[1] - 1),
                 Position.create(result.span.end_position[0] - 1, result.span.end_position[1] - 1),
             ),
-            result.message
+            result.message,
+            result.type == "error" ? DiagnosticSeverity.Error : DiagnosticSeverity.Warning,
         )
     })
 }

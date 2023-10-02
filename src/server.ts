@@ -113,7 +113,7 @@ export function startServer(options?: LSOptions): void {
         }
         
         // Revalidate all open teo schemas
-        documents.all().forEach(validateTextDocumentAndSendDiagnostics) // eslint-disable-line @typescript-eslint/no-misused-promises
+        documents.all().forEach(validateTextDocumentAndSendDiagnostics, documents) // eslint-disable-line @typescript-eslint/no-misused-promises
     })
     
     // Only keep settings for open documents
@@ -131,7 +131,7 @@ export function startServer(options?: LSOptions): void {
     }
     
     function validateTextDocumentAndSendDiagnostics(textDocument: TextDocument) {
-        const diagnostics: Diagnostic[] = validateTextDocument(textDocument)
+        const diagnostics: Diagnostic[] = validateTextDocument(textDocument, documents.all())
         connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
     }
     

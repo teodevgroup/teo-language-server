@@ -77,14 +77,13 @@ function startServer(options) {
             documentSettings.clear();
         }
         // Revalidate all open teo schemas
-        documents.all().forEach(validateTextDocumentAndSendDiagnostics); // eslint-disable-line @typescript-eslint/no-misused-promises
+        documents.all().forEach(validateTextDocumentAndSendDiagnostics, documents); // eslint-disable-line @typescript-eslint/no-misused-promises
     });
     // Only keep settings for open documents
     documents.onDidClose((e) => {
         documentSettings.delete(e.document.uri);
     });
     documents.onDidChangeContent((change) => {
-        console.log("DID CHANGED CONTENT: " + change.document.uri);
         validateTextDocumentAndSendDiagnostics(change.document);
     });
     // Note: VS Code strips newline characters from the message
@@ -92,7 +91,7 @@ function startServer(options) {
         connection.window.showErrorMessage(errorMessage);
     }
     function validateTextDocumentAndSendDiagnostics(textDocument) {
-        const diagnostics = (0, wasm_1.validateTextDocument)(textDocument);
+        const diagnostics = (0, wasm_1.validateTextDocument)(textDocument, documents.all());
         connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
     }
     function getDocument(uri) {
