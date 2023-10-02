@@ -5,38 +5,34 @@ const vscode_languageserver_1 = require("vscode-languageserver");
 const node_1 = require("vscode-languageserver/node");
 const vscode_languageserver_textdocument_1 = require("vscode-languageserver-textdocument");
 const wasm_1 = require("./wasm");
-function getConnection(options) {
-    let connection = options === null || options === void 0 ? void 0 : options.connection;
-    if (!connection) {
-        connection = process.argv.includes('--stdio')
-            ? (0, node_1.createConnection)(process.stdin, process.stdout)
-            : (0, node_1.createConnection)(new node_1.IPCMessageReader(process), new node_1.IPCMessageWriter(process));
-    }
-    return connection;
-}
-let hasCodeActionLiteralsCapability = false;
-let hasConfigurationCapability = false;
 /**
- * Starts the language server.
- *
- * @param options Options to customize behavior
- */
+* Starts the language server.
+*
+* @param options Options to customize behavior
+*/
 function startServer(options) {
-    // Source code: https://github.com/microsoft/vscode-languageserver-node/blob/main/server/src/common/server.ts#L1044
-    const connection = getConnection(options);
-    console.log = connection.console.log.bind(connection.console);
-    console.error = connection.console.error.bind(connection.console);
+    // Create a connection for the server, using Node's IPC as a transport.
+    // Also include all preview / proposed LSP features.
+    const connection = (0, node_1.createConnection)(vscode_languageserver_1.ProposedFeatures.all);
+    // Create a simple text document manager.
     const documents = new vscode_languageserver_1.TextDocuments(vscode_languageserver_textdocument_1.TextDocument);
+    let hasConfigurationCapability = false;
+    let hasWorkspaceFolderCapability = false;
+    let hasDiagnosticRelatedInformationCapability = false;
     connection.onInitialize((params) => {
-        var _a, _b, _c;
         // Logging first...
         connection.console.info(`Teo langauge server started`);
-        // ... and then capabilities of the language server
         const capabilities = params.capabilities;
-        hasCodeActionLiteralsCapability = Boolean((_b = (_a = capabilities === null || capabilities === void 0 ? void 0 : capabilities.textDocument) === null || _a === void 0 ? void 0 : _a.codeAction) === null || _b === void 0 ? void 0 : _b.codeActionLiteralSupport);
-        hasConfigurationCapability = Boolean((_c = capabilities === null || capabilities === void 0 ? void 0 : capabilities.workspace) === null || _c === void 0 ? void 0 : _c.configuration);
+        // Does the client support the `workspace/configuration` request?
+        // If not, we fall back using global settings.
+        hasConfigurationCapability = !!(capabilities.workspace && !!capabilities.workspace.configuration);
+        hasWorkspaceFolderCapability = !!(capabilities.workspace && !!capabilities.workspace.workspaceFolders);
+        hasDiagnosticRelatedInformationCapability = !!(capabilities.textDocument &&
+            capabilities.textDocument.publishDiagnostics &&
+            capabilities.textDocument.publishDiagnostics.relatedInformation);
         const result = {
             capabilities: {
+                textDocumentSync: vscode_languageserver_1.TextDocumentSyncKind.Incremental,
                 definitionProvider: true,
                 documentFormattingProvider: true,
                 completionProvider: {
@@ -48,9 +44,11 @@ function startServer(options) {
                 documentSymbolProvider: true,
             },
         };
-        if (hasCodeActionLiteralsCapability) {
-            result.capabilities.codeActionProvider = {
-                codeActionKinds: [vscode_languageserver_1.CodeActionKind.QuickFix],
+        if (hasWorkspaceFolderCapability) {
+            result.capabilities.workspace = {
+                workspaceFolders: {
+                    supported: true
+                }
             };
         }
         return result;
@@ -58,8 +56,12 @@ function startServer(options) {
     connection.onInitialized(() => {
         if (hasConfigurationCapability) {
             // Register for all configuration changes.
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             connection.client.register(vscode_languageserver_1.DidChangeConfigurationNotification.type, undefined);
+        }
+        if (hasWorkspaceFolderCapability) {
+            connection.workspace.onDidChangeWorkspaceFolders(_event => {
+                connection.console.log('Workspace folder change event received.');
+            });
         }
     });
     // The global settings, used when the `workspace/configuration` request is not supported by the client or is not set by the user.
@@ -87,7 +89,7 @@ function startServer(options) {
     }
     function validateTextDocument(textDocument) {
         const diagnostics = (0, wasm_1.handleDiagnosticsRequest)(textDocument);
-        void connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+        connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
     }
     documents.onDidChangeContent((change) => {
         validateTextDocument(change.document);
