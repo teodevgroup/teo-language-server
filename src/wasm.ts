@@ -1,4 +1,4 @@
-import { lint } from '@teocloud/teo-language-server-wasm'
+import { lint, find_definitions } from '@teocloud/teo-language-server-wasm'
 import {
     DocumentFormattingParams,
     TextEdit,
@@ -61,4 +61,45 @@ type TeoParserDiagnosticsItemSpan = {
     end: number
     start_position: [number, number]
     end_position: [number, number]
+}
+
+type TeoDefinition = {
+    path: string
+    selection_span: TeoSpan
+    target_span: TeoSpan
+    identifier_span: TeoSpan
+}
+
+type TeoSpan = {
+    start: number
+    end: number
+    start_position: number[]
+    end_position: number[]
+}
+
+export function findDefinitionsAtPosition(uri: string, documents: TextDocument[], position: Position): LocationLink[] {
+    const unsavedFiles: {[key: string]: string} = {};
+    documents.map((document) => {
+        unsavedFiles[document.uri.replace('file://', '')] = document.getText()
+    })
+    const sanitizedUri = uri.replace('file://', '')
+    const results: TeoDefinition[] = find_definitions(sanitizedUri, unsavedFiles, [position.line + 1, position.character + 1])
+    return results.map((result) => {
+        return LocationLink.create(
+            result.path, 
+            Range.create(
+                Position.create(result.target_span.start_position[0] - 1, result.target_span.start_position[1] - 1),
+                Position.create(result.target_span.end_position[0] - 1, result.target_span.end_position[1] - 1)
+            ),
+            Range.create(
+                Position.create(result.identifier_span.start_position[0] - 1, result.identifier_span.start_position[1] - 1),
+                Position.create(result.identifier_span.end_position[0] - 1, result.identifier_span.end_position[1] - 1)
+            ),
+            Range.create(
+                Position.create(result.selection_span.start_position[0] - 1, result.selection_span.start_position[1] - 1),
+                Position.create(result.selection_span.end_position[0] - 1, result.selection_span.end_position[1] - 1)
+            )
+        )
+    })
+
 }

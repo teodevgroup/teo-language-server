@@ -16,11 +16,13 @@ import {
     DocumentSymbolParams,
     ProposedFeatures,
     TextDocumentSyncKind,
+    LocationLink,
+    Range,
 } from 'vscode-languageserver'
 import { createConnection, IPCMessageReader, IPCMessageWriter } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { LSOptions, LSSettings } from './settings'
-import { validateTextDocument } from './wasm'
+import { findDefinitionsAtPosition, validateTextDocument } from './wasm'
 
 /**
 * Starts the language server.
@@ -63,7 +65,7 @@ export function startServer(options?: LSOptions): void {
         const result: InitializeResult = {
             capabilities: {
                 textDocumentSync: TextDocumentSyncKind.Full,
-                //definitionProvider: true,
+                definitionProvider: true,
                 //documentFormattingProvider: true,
                 //completionProvider: {
                 //    resolveProvider: true,
@@ -139,12 +141,9 @@ export function startServer(options?: LSOptions): void {
         return documents.get(uri)
     }
     
-    // connection.onDefinition((params: DeclarationParams) => {
-    //   const doc = getDocument(params.textDocument.uri)
-    //   if (doc) {
-    //     return MessageHandler.handleDefinitionRequest(doc, params)
-    //   }
-    // })
+    connection.onDefinition((params: DeclarationParams) => {
+        return findDefinitionsAtPosition(params.textDocument.uri, documents.all(), params.position)
+    })
     
     // connection.onCompletion((params: CompletionParams) => {
     //   const doc = getDocument(params.textDocument.uri)

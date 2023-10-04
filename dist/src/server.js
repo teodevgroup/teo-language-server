@@ -33,7 +33,7 @@ function startServer(options) {
         const result = {
             capabilities: {
                 textDocumentSync: vscode_languageserver_1.TextDocumentSyncKind.Full,
-                //definitionProvider: true,
+                definitionProvider: true,
                 //documentFormattingProvider: true,
                 //completionProvider: {
                 //    resolveProvider: true,
@@ -97,12 +97,9 @@ function startServer(options) {
     function getDocument(uri) {
         return documents.get(uri);
     }
-    // connection.onDefinition((params: DeclarationParams) => {
-    //   const doc = getDocument(params.textDocument.uri)
-    //   if (doc) {
-    //     return MessageHandler.handleDefinitionRequest(doc, params)
-    //   }
-    // })
+    connection.onDefinition((params) => {
+        return (0, wasm_1.findDefinitionsAtPosition)(params.textDocument.uri, documents.all(), params.position);
+    });
     // connection.onCompletion((params: CompletionParams) => {
     //   const doc = getDocument(params.textDocument.uri)
     //   if (doc) {
