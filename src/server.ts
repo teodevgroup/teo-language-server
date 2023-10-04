@@ -21,15 +21,15 @@ import {
 } from 'vscode-languageserver'
 import { createConnection, IPCMessageReader, IPCMessageWriter } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { LSOptions, LSSettings } from './settings'
-import { findDefinitionsAtPosition, validateTextDocument } from './wasm'
+import { findDefinitionsAtPosition, removeCachedSchema, validateTextDocument } from './wasm'
+import { sanitizeUri } from './utils'
 
 /**
 * Starts the language server.
 *
 * @param options Options to customize behavior
 */
-export function startServer(options?: LSOptions): void {
+export function startServer(): void {
     // Create a connection for the server, using Node's IPC as a transport.
     // Also include all preview / proposed LSP features.
     const connection = createConnection(ProposedFeatures.all)
@@ -37,31 +37,9 @@ export function startServer(options?: LSOptions): void {
     // Create a simple text document manager.
     const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
 
-
-    let hasConfigurationCapability = false
-    let hasWorkspaceFolderCapability = false
-    let hasDiagnosticRelatedInformationCapability = false
-    
     connection.onInitialize((params: InitializeParams) => {
         // Logging first...
         connection.console.info(`Teo langauge server started`)
-
-        const capabilities = params.capabilities
-    
-        // Does the client support the `workspace/configuration` request?
-        // If not, we fall back using global settings.
-        hasConfigurationCapability = !!(
-            capabilities.workspace && !!capabilities.workspace.configuration
-        );
-        hasWorkspaceFolderCapability = !!(
-            capabilities.workspace && !!capabilities.workspace.workspaceFolders
-        );
-        hasDiagnosticRelatedInformationCapability = !!(
-            capabilities.textDocument &&
-            capabilities.textDocument.publishDiagnostics &&
-            capabilities.textDocument.publishDiagnostics.relatedInformation
-        );
-
         const result: InitializeResult = {
             capabilities: {
                 textDocumentSync: TextDocumentSyncKind.Full,
@@ -74,71 +52,47 @@ export function startServer(options?: LSOptions): void {
                 //hoverProvider: true,
                 //renameProvider: true,
                 //documentSymbolProvider: true,
-            },
-        }
-    
-        if (hasWorkspaceFolderCapability) {
-            result.capabilities.workspace = {
-                workspaceFolders: {
-                    supported: true
+                workspace: {
+                    workspaceFolders: {
+                        supported: true
+                    }
                 }
-            };
+            },
         }
         return result;
     });
     
     connection.onInitialized(() => {
-        if (hasConfigurationCapability) {
-            // Register for all configuration changes.
-            connection.client.register(DidChangeConfigurationNotification.type, undefined);
-        }
-        if (hasWorkspaceFolderCapability) {
-            connection.workspace.onDidChangeWorkspaceFolders(_event => {
-                connection.console.log('Workspace folder change event received.');
-            });
-        }
+        connection.client.register(DidChangeConfigurationNotification.type, undefined);
+        connection.workspace.onDidChangeWorkspaceFolders(_event => {
+            connection.console.log('Workspace folder change event received.');
+        });
     });
-    
-    // The global settings, used when the `workspace/configuration` request is not supported by the client or is not set by the user.
-    // This does not apply to VS Code, as this client supports this setting.
-    // const defaultSettings: LSSettings = {}
-    // let globalSettings: LSSettings = defaultSettings // eslint-disable-line
-    
-    // Cache the settings of all open documents
-    const documentSettings: Map<string, Thenable<LSSettings>> = new Map<string, Thenable<LSSettings>>()
 
     connection.onDidChangeConfiguration((_change) => {
         connection.console.info('Configuration changed.')
-        if (hasConfigurationCapability) {
-            // Reset all cached document settings
-            documentSettings.clear()
-        }
         
         // Revalidate all open teo schemas
         documents.all().forEach(validateTextDocumentAndSendDiagnostics, documents) // eslint-disable-line @typescript-eslint/no-misused-promises
     })
     
-    // Only keep settings for open documents
+    // Remove cached schema from WASM
     documents.onDidClose((e) => {
-        documentSettings.delete(e.document.uri)
+        removeCachedSchema(sanitizeUri(e.document.uri))
     })
 
     documents.onDidChangeContent((change: { document: TextDocument }) => {
         validateTextDocumentAndSendDiagnostics(change.document)
     })
-    
-    // Note: VS Code strips newline characters from the message
-    function showErrorToast(errorMessage: string): void {
-        connection.window.showErrorMessage(errorMessage)
-    }
-    
+
     function validateTextDocumentAndSendDiagnostics(textDocument: TextDocument) {
         const diagnostics: Diagnostic[] = validateTextDocument(textDocument, documents.all())
         connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
     }
     
-    function getDocument(uri: string): TextDocument | undefined {
-        return documents.get(uri)
+    // Note: VS Code strips newline characters from the message
+    function showErrorToast(errorMessage: string): void {
+        connection.window.showErrorMessage(errorMessage)
     }
     
     connection.onDefinition((params: DeclarationParams) => {
@@ -157,13 +111,9 @@ export function startServer(options?: LSOptions): void {
     //   return MessageHandler.handleCompletionResolveRequest(completionItem)
     // })
     
-    // Unused now
-    // TODO remove or experiment new file watcher
+
     connection.onDidChangeWatchedFiles(() => {
-        // Monitored files have changed in VS Code
-        connection.console.log(`Types have changed. Sending request to restart TS Language Server.`)
-        // Restart TS Language Server
-        void connection.sendNotification('teo/didChangeWatchedFiles', {})
+
     })
     
     // connection.onHover((params: HoverParams) => {
