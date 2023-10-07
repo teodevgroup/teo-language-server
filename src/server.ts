@@ -21,7 +21,7 @@ import {
 } from 'vscode-languageserver'
 import { createConnection, IPCMessageReader, IPCMessageWriter } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { findDefinitionsAtPosition, removeCachedSchema, validateTextDocument } from './wasm'
+import { completionItemsAtPosition, findDefinitionsAtPosition, removeCachedSchema, validateTextDocument } from './wasm'
 import { sanitizeUri } from './utils'
 
 /**
@@ -44,11 +44,11 @@ export function startServer(): void {
             capabilities: {
                 textDocumentSync: TextDocumentSyncKind.Full,
                 definitionProvider: true,
+                completionProvider: {
+                   resolveProvider: true,
+                   triggerCharacters: ['@', '"', '.'],
+                },
                 //documentFormattingProvider: true,
-                //completionProvider: {
-                //    resolveProvider: true,
-                //    triggerCharacters: ['@', '"', '.'],
-                //},
                 //hoverProvider: true,
                 //renameProvider: true,
                 //documentSymbolProvider: true,
@@ -96,20 +96,16 @@ export function startServer(): void {
     }
     
     connection.onDefinition((params: DeclarationParams) => {
-        return findDefinitionsAtPosition(params.textDocument.uri, documents.all(), params.position)
+        return findDefinitionsAtPosition(params.textDocument.uri, params.position)
     })
     
-    // connection.onCompletion((params: CompletionParams) => {
-    //   const doc = getDocument(params.textDocument.uri)
-    //   if (doc) {
-    //     return MessageHandler.handleCompletionRequest(params, doc, showErrorToast)
-    //   }
-    // })
+    connection.onCompletion((params: CompletionParams) => {
+        return completionItemsAtPosition(params.textDocument.uri, params.position, documents.all())
+    })
     
-    // // This handler resolves additional information for the item selected in the completion list.
-    // connection.onCompletionResolve((completionItem: CompletionItem) => {
-    //   return MessageHandler.handleCompletionResolveRequest(completionItem)
-    // })
+    connection.onCompletionResolve((completionItem: CompletionItem) => {
+        return completionItem
+    })
     
 
     connection.onDidChangeWatchedFiles(() => {

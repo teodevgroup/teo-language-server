@@ -1,4 +1,4 @@
-import { lint, find_definitions, remove_cached_schema } from '@teocloud/teo-language-server-wasm'
+import { lint, find_definitions, remove_cached_schema, completion_items } from '@teocloud/teo-language-server-wasm'
 import {
     DocumentFormattingParams,
     TextEdit,
@@ -81,7 +81,14 @@ type TeoSpan = {
     end_position: number[]
 }
 
-export function findDefinitionsAtPosition(uri: string, documents: TextDocument[], position: Position): LocationLink[] {
+type TeoCompletionItem = {
+    label: string
+    namespace_path?: string
+    documentation?: string
+    detail?: string
+}
+
+export function findDefinitionsAtPosition(uri: string, position: Position): LocationLink[] {
     const sanitizedUri = uri.replace('file://', '')
     const results: TeoDefinition[] = find_definitions(sanitizedUri, [position.line + 1, position.character + 1])
     return results.map((result) => {
@@ -101,5 +108,25 @@ export function findDefinitionsAtPosition(uri: string, documents: TextDocument[]
             )
         )
     })
+}
 
+export function completionItemsAtPosition(uri: string, position: Position, documents: TextDocument[]): CompletionItem[] {
+    console.log(position)
+    const unsavedFiles: {[key: string]: string} = {};
+    documents.map((document) => {
+        unsavedFiles[document.uri.replace('file://', '')] = document.getText()
+    })
+    const sanitizedUri = uri.replace('file://', '')
+    const results: TeoCompletionItem[] = completion_items(sanitizedUri, [position.line + 1, position.character + 1], unsavedFiles)
+    return results.map((result) => {
+        let item = CompletionItem.create(
+            result.label
+        )
+        item.documentation = result.documentation
+        item.detail = result.detail
+        item.labelDetails = {
+            description: result.namespace_path,
+        }
+        return item
+    })
 }

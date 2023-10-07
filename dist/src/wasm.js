@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.findDefinitionsAtPosition = exports.validateTextDocument = exports.removeCachedSchema = void 0;
+exports.completionItemsAtPosition = exports.findDefinitionsAtPosition = exports.validateTextDocument = exports.removeCachedSchema = void 0;
 const teo_language_server_wasm_1 = require("@teocloud/teo-language-server-wasm");
 const vscode_languageserver_1 = require("vscode-languageserver");
 function removeCachedSchema(uri) {
@@ -22,7 +22,7 @@ function validateTextDocument(document, documents) {
     });
 }
 exports.validateTextDocument = validateTextDocument;
-function findDefinitionsAtPosition(uri, documents, position) {
+function findDefinitionsAtPosition(uri, position) {
     const sanitizedUri = uri.replace('file://', '');
     const results = (0, teo_language_server_wasm_1.find_definitions)(sanitizedUri, [position.line + 1, position.character + 1]);
     return results.map((result) => {
@@ -30,4 +30,23 @@ function findDefinitionsAtPosition(uri, documents, position) {
     });
 }
 exports.findDefinitionsAtPosition = findDefinitionsAtPosition;
+function completionItemsAtPosition(uri, position, documents) {
+    console.log(position);
+    const unsavedFiles = {};
+    documents.map((document) => {
+        unsavedFiles[document.uri.replace('file://', '')] = document.getText();
+    });
+    const sanitizedUri = uri.replace('file://', '');
+    const results = (0, teo_language_server_wasm_1.completion_items)(sanitizedUri, [position.line + 1, position.character + 1], unsavedFiles);
+    return results.map((result) => {
+        let item = vscode_languageserver_1.CompletionItem.create(result.label);
+        item.documentation = result.documentation;
+        item.detail = result.detail;
+        item.labelDetails = {
+            description: result.namespace_path,
+        };
+        return item;
+    });
+}
+exports.completionItemsAtPosition = completionItemsAtPosition;
 //# sourceMappingURL=wasm.js.map

@@ -24,11 +24,11 @@ function startServer() {
             capabilities: {
                 textDocumentSync: vscode_languageserver_1.TextDocumentSyncKind.Full,
                 definitionProvider: true,
+                completionProvider: {
+                    resolveProvider: true,
+                    triggerCharacters: ['@', '"', '.'],
+                },
                 //documentFormattingProvider: true,
-                //completionProvider: {
-                //    resolveProvider: true,
-                //    triggerCharacters: ['@', '"', '.'],
-                //},
                 //hoverProvider: true,
                 //renameProvider: true,
                 //documentSymbolProvider: true,
@@ -68,18 +68,14 @@ function startServer() {
         connection.window.showErrorMessage(errorMessage);
     }
     connection.onDefinition((params) => {
-        return (0, wasm_1.findDefinitionsAtPosition)(params.textDocument.uri, documents.all(), params.position);
+        return (0, wasm_1.findDefinitionsAtPosition)(params.textDocument.uri, params.position);
     });
-    // connection.onCompletion((params: CompletionParams) => {
-    //   const doc = getDocument(params.textDocument.uri)
-    //   if (doc) {
-    //     return MessageHandler.handleCompletionRequest(params, doc, showErrorToast)
-    //   }
-    // })
-    // // This handler resolves additional information for the item selected in the completion list.
-    // connection.onCompletionResolve((completionItem: CompletionItem) => {
-    //   return MessageHandler.handleCompletionResolveRequest(completionItem)
-    // })
+    connection.onCompletion((params) => {
+        return (0, wasm_1.completionItemsAtPosition)(params.textDocument.uri, params.position, documents.all());
+    });
+    connection.onCompletionResolve((completionItem) => {
+        return completionItem;
+    });
     connection.onDidChangeWatchedFiles(() => {
     });
     // connection.onHover((params: HoverParams) => {
