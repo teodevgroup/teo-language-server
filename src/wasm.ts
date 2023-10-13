@@ -93,7 +93,6 @@ export function findDefinitionsAtPosition(uri: string, position: Position): Loca
     const sanitizedUri = uri.replace('file://', '')
     const results: TeoDefinition[] = find_definitions(sanitizedUri, [position.line + 1, position.character + 1])
     return results.map((result) => {
-        console.log(result)
         return LocationLink.create(
             result.path === "(builtin)std.teo" ? path.join(__dirname, "../dumps/builtin/std.teo") : result.path,  
             Range.create(
