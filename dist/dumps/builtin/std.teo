@@ -1,0 +1,830 @@
+/// @name std
+/// The Teo standard library
+namespace std {
+
+    /// @name EnvVars
+    /// The environment variables
+    declare struct EnvVars {
+        declare static function new(): Self
+        declare function subscript(key?: String): String?
+    }
+
+    /// @name ENV
+    /// The environment variables
+    let ENV = EnvVars()
+
+    declare struct Null {
+        declare static function new(): Self
+    }
+
+    declare struct Bool {
+        declare static function new(from?: String): Self
+    }
+
+    declare struct Int {
+        declare static function new(from?: String): Self
+    }
+
+    declare struct Int64 {
+        declare static function new(from?: String): Self
+    }
+
+    declare struct Float {
+        declare static function new(from?: String): Self
+    }
+
+    declare struct Float32 {
+        declare static function new(from?: String): Self
+    }
+
+    declare struct Decimal {
+        declare static function new(from?: String): Self
+    }
+
+    declare struct String {
+        declare static function new(from?: Int | Int64 | Float | Float32 | Bool | ObjectId): Self
+    }
+
+    declare struct ObjectId {
+        declare static function new(from?: String): Self
+    }
+
+    declare struct Date {
+        declare static function new(from?: String): Self
+    }
+
+    declare struct DateTime {
+        declare static function new(from?: String): Self
+    }
+
+    declare struct Array<T> {
+        declare static function new(): Self
+        declare function subscript(index?: Int): T?
+    }
+
+    declare struct Dictionary<T> {
+        declare static function new(): Self
+        declare function subscript(key?: String): T?
+    }
+
+    /// @name Action
+    /// Represents the predefined actions
+    interface option enum Action {
+        create = 1
+        update = 1 << 1
+        delete = 1 << 2
+        find = 1 << 3
+        first = 1 << 4
+        connect = 1 << 5
+        disconnect = 1 << 6
+        set = 1 << 7
+        join = 1 << 8
+        signIn = 1 << 9
+        identity = 1 << 10
+        count = 1 << 11
+        aggregate = 1 << 12
+        groupBy = 1 << 13
+        programCode = 1 << 14
+        upsert = .create | .update
+        connectOrCreate = .connect | .create
+        joinCreate = .join | .create
+        joinDelete = .join | .delete
+        findFirst = .find | .first
+        entry = 1 << 15
+        nested = 1 << 16
+        internalPosition = 1 << 17
+        single = 1 << 18
+        many = 1 << 19
+        internalAmount = 1 << 20
+    }
+
+    /// @name Sort Order
+    /// Represents the sort order
+    interface enum Sort {
+        asc
+        desc
+    }
+
+    /// @name Database
+    /// Represents the supported database of Teo
+    interface enum Database {
+        /// @name MongoDB
+        /// The MongoDB database    
+        mongo
+        /// @name MySQL
+        /// The MySQL database
+        mysql
+        /// @name PostgreSQL
+        /// The PostgreSQL database
+        postgres
+        /// @name SQLite
+        /// The SQLite database
+        sqlite
+    }
+
+    /// @name Client Language
+    /// The programming langauge of the generated client
+    interface enum ClientLanguage {
+        /// @name javaScript
+        /// The javaScript programming language
+        javaScript
+        /// @name TypeScript
+        /// The TypeScript programming language
+        typeScript
+        /// @name Swift
+        /// The Swift programming language
+        swift
+        /// @name Kotlin
+        /// The Kotlin programming language
+        kotlin
+        /// @name C#
+        /// The C# programming language
+        cSharp
+        /// @name Dart
+        /// The Dart programming language
+        dart
+    }
+
+    /// @name Runtime
+    /// Represents the supported runtime of Teo
+    interface enum Runtime {
+        /// @name Rust
+        /// The rust runtime
+        rust
+        /// @name Node.js
+        /// The Node.js runtime
+        node
+        /// @name Python
+        /// The python runtime
+        python
+    }
+
+    interface enum DatabaseType {
+        text
+        varChar
+        char
+    }
+
+    /// @name Connector
+    /// Represents the database connection
+    declare config connector {
+        /// @name Provider
+        /// Represents the type of database this app connects
+        provider: Database
+        /// @name URL
+        /// The URL of the database to connect to
+        url: String
+    }
+
+    /// @name Server
+    /// Define the HTTP server configuration
+    declare config server {
+        /// @name bind
+        /// On which IP and port the HTTP server binds
+        bind: (String, Int)
+        /// @name path prefix
+        /// The request URL path prefix
+        pathPrefix: String?
+    }
+
+    /// @name Entity Generator
+    /// Define an entity generator
+    declare config entity {
+        /// @name Provider
+        /// Which runtime is used for the generated entities
+        provider: Runtime
+        /// @name Destination
+        /// Where the generated entities are places
+        dest: String
+    }
+
+    /// @name Client Generator
+    /// Define a client generator
+    declare config client {
+        /// @name Provider
+        /// Which programming language is used for the generated client
+        provider: ClientLanguage
+        /// @name Destination
+        /// Where the generated client are placed
+        dest: String
+        /// @name Package
+        /// Whether generate code only or a package, defaults to `true`
+        package: Bool?
+        /// @name Host
+        /// The host for the generated client
+        host: String
+        /// @name Object Name
+        /// The main object name for the generated package
+        objectName: String?
+        /// @name Git Commit
+        /// Whether do `git commit` after each generation
+        gitCommit: Bool?
+    }
+
+    /// @name Map
+    /// Specify an underlying database table name for the model
+    declare unique model decorator map(table_name?: String)
+
+    /// @name Id
+    /// Specify the model's primary index
+    declare unique model decorator id(fields?: ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self> | ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self>[], map?: String?)
+
+    /// @name Index
+    /// Add an index to the model
+    declare model decorator index(fields?: ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self> | ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self>[], map?: String?)
+
+    /// @name Unique
+    /// Add a unique constraint to the model
+    declare model decorator unique(fields?: ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self> | ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self>[], map?: String?)
+
+    /// @name Migration
+    /// Specify the migration operations for the model
+    declare unique model decorator migration(renamed: (String | Array<String>)?, version: String?, drop: Bool?)
+
+    /// @name Before Save
+    /// Specify the action to trigger before an object is saved
+    declare unique model decorator beforeSave(pipeline?: Pipeline<Self, Ignored>)
+
+    /// @name After Save
+    /// Specify the action to trigger after an object is saved
+    declare unique model decorator afterSave(pipeline?: Pipeline<Self, Ignored>)
+
+    /// @name Before Delete
+    /// Specify the action to trigger before an object is deleted
+    declare unique model decorator beforeDelete(pipeline?: Pipeline<Self, Ignored>)
+
+    /// @name After Delete
+    /// Specify the action to trigger after an object is deleted
+    declare unique model decorator afterDelete(pipeline?: Pipeline<Self, Ignored>)
+
+    /// @name Can Read
+    declare unique model decorator canRead(pipeline?: Pipeline<Self, Ignored>)
+
+    /// @name Can Mutate
+    declare unique model decorator canWrite(pipeline?: Pipeline<Self, Ignored>)
+
+    /// @name Disable
+    /// Specify disabled actions
+    declare unique model decorator disable(actions?: Action)
+
+    /// @name Identity
+    /// Specify whether the model is used as identity
+    declare unique model decorator identity
+
+    /// @name Map
+    /// Specify an underlying database column name for the model field
+    declare unique model field decorator map(table_name?: String)
+
+    /// @name Database Type
+    /// Specify an underlying database type for the model field
+    declare unique model field decorator db(type?: DatabaseType)
+
+    /// @name Readonly
+    /// Disallow this field to be written by the client
+    declare unique model field decorator readonly
+
+    /// @name Writeonly
+    /// Disallow this field to be read by the client
+    declare unique model field decorator writeonly
+
+    /// @name Internal
+    /// Disallow this field to be read or write by the client
+    declare unique model field decorator internal
+
+    /// @name Write on Create
+    /// This field can only be written on create
+    declare unique model field decorator writeOnCreate
+
+    /// @name Write Once
+    /// This field can only be written if current value is null
+    declare unique model field decorator writeOnce
+
+    /// @name Write Nonnull
+    /// This field can only be written if new value is not null
+    declare unique model field decorator writeNonNull
+
+    /// @name Read If
+    /// This field can be read by the client if the pipeline passes
+    declare unique model field decorator readIf(cond?: Pipeline<Self, Ignored>)
+
+    /// @name Write If
+    /// This field can be written by the client if the pipeline passes
+    declare unique model field decorator writeIf(cond?: Pipeline<Self, Ignored>)
+
+    /// @name Read Write
+    /// This field can be written and read by the client, this is the default behavior
+    declare unique model field decorator readwrite
+
+    /// @name Present With
+    /// Specify when some other field are not null, this field is required
+    declare unique model field decorator presentWith(fields?: ModelScalarFields<Self> | ModelScalarFields<Self>[])
+
+    /// @name Present Without
+    /// Specify when some other field are null, this field is required
+    declare unique model field decorator presentWithout(fields?: ModelScalarFields<Self> | ModelScalarFields<Self>[])
+
+    /// @name Present If
+    /// Specify when some condition passes, this field is required
+    declare unique model field decorator presentIf(cond?: Pipeline<Self, Ignored>)
+
+    /// @name Atomic
+    /// This field can be updated with atomic updator
+    declare unique model field decorator atomic
+
+    /// @name Nonatomic
+    /// This field cannot be updated with atomic updator
+    declare unique model field decorator nonatomic
+
+    /// @name Id
+    /// Specify this field as the model's primary index
+    declare exclusive model field decorator id(sort: Sort?, length: Int?, map: String?)
+
+    /// @name Index
+    /// Index this field
+    declare unique model field decorator index(sort: Sort?, length: Int?, map: String?)
+
+    /// @name Unique
+    /// Unique index this field
+    declare unique model field decorator unique(sort: Sort?, length: Int?, map: String?)
+
+    /// @name Virtual
+    /// Specify a virtual field
+    declare unique model field decorator virtual
+
+    /// @name Record Previous
+    /// Record the previous value for this field
+    declare unique model field decorator recordPrevious
+
+    /// @name Input Omissible
+    /// When generating clients, the input is always optional
+    declare unique model field decorator inputOmissible
+
+    /// @name Outout Omissible
+    /// When generating clients, the outout is always optional
+    declare unique model field decorator outputOmissible
+
+    /// @name Auto
+    /// The field value is automatically set by the underlying database
+    declare unique model field decorator auto
+
+    /// @name Auto Increment
+    /// The field value is a serial number automatically set by the underlying database
+    declare unique model field decorator autoIncrement
+
+    /// @name Default
+    /// Specify a default value for this field
+    declare unique model field decorator default(value?: ThisFieldType | Pipeline<Null, ThisFieldType>)
+
+    /// @name Foreign Key
+    /// This field is used as foreign key
+    declare unique model field decorator foreignKey
+
+    /// @name On Set
+    /// This pipeline is triggered when value is set
+    declare unique model field decorator onSet(pipeline?: Pipeline<ThisFieldType?, ThisFieldType?>)
+
+    /// @name On Save
+    /// This pipeline is triggered before the value is saving into the database
+    declare unique model field decorator onSave(pipeline?: Pipeline<ThisFieldType?, ThisFieldType>)
+
+    /// @name On Output
+    /// This pipeline is triggered on output
+    declare unique model field decorator onOutput(pipeline?: Pipeline<ThisFieldType, ThisFieldType>)
+
+    /// @name Auth Identity
+    /// This field is used as auth identity
+    declare unique model field decorator authIdentity
+
+    /// @name Auth By
+    /// This field is used as signing in identity checker
+    declare unique model field decorator authBy(pipeline?: Pipeline<ThisFieldType, Ignored>)
+
+    /// @name Queryable
+    /// This field can be queried by the client
+    declare unique model field decorator queryable
+
+    /// @name Unqueryable
+    /// This field can't be queried by the client
+    declare unique model field decorator unqueryable
+
+    /// @name Sortable
+    /// This field can be sorted by the client
+    declare unique model field decorator sortable
+
+    /// @name Unsortable
+    /// This field can't be sorted by the client
+    declare unique model field decorator unsortable
+
+    /// @name Can Read
+    /// Specify the permission checker for read on this field
+    declare unique model field decorator canRead(pipeline?: Pipeline<Self, Ignored>)
+
+    /// @name Can Mutate
+    /// Specify the permission checker for write on this field
+    declare unique model field decorator canMutate(pipeline?: Pipeline<Self, Ignored>)
+
+    /// @name Migration
+    /// Specify the migration operation for this field
+    declare unique model field decorator migration(
+        renamed: (String | Array<String>)?, 
+        version: String?, 
+        default: ThisFieldType?,
+        priority: Int?
+    )
+
+    /// @name Dropped
+    /// Specify that this field is dropped
+    declare unique model field decorator dropped
+
+    /// @name Relation
+    /// Define a model relation
+    declare unique model relation decorator relation {
+        /// Define a normal relation
+        variant(fields: ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self> | ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self>[], references: ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<ThisFieldType> | ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<ThisFieldType>[])
+        /// Define a through relation
+        variant(through: Model, local: ModelDirectRelations<Self>, foreign: ModelDirectRelations<ThisFieldType>)
+    }
+
+    /// @name Getter
+    /// Define a property with getter
+    declare unique model property decorator getter(pipeline?: Pipeline<Self, ThisFieldType>)
+
+    /// @name Setter
+    /// Define a property with setter
+    declare unique model property decorator setter(pipeline?: Pipeline<Self, Ignored>)
+
+    /// @name Cache
+    /// Define a cached property, a cached property is saved into the database
+    declare unique model property decorator cached
+
+    /// @name Dependencies
+    /// Define dependencies for a cached property
+    declare unique model property decorator deps(deps?: ModelScalarFieldsWithoutVirtuals<Self> | ModelScalarFieldsWithoutVirtuals<Self>[])
+
+    /// @name Index
+    /// Define index for this cached property
+    declare unique model property decorator index(sort: Sort?, length: Int?, map: String?)
+
+    /// @name Unique
+    /// Define unique index for this cached property
+    declare unique model property decorator unique(sort: Sort?, length: Int?, map: String?)
+
+    /// @name Add
+    /// Add a new numeric value 
+    declare pipeline item add {
+        variant(value?: Int | Pipeline<Int, Int>): Int -> Int
+        variant(value?: Int64 | Pipeline<Int64, Int64>): Int64 -> Int64
+        variant(value?: Float32 | Pipeline<Float32, Float32>): Float32 -> Float32
+        variant(value?: Float | Pipeline<Float, Float>): Float -> Float
+        variant(value?: Decimal | Pipeline<Decimal, Decimal>): Decimal -> Decimal
+    }
+
+    /// @name Sub
+    /// Subtract a numeric value 
+    declare pipeline item sub {
+        variant(value?: Int | Pipeline<Int, Int>): Int -> Int
+        variant(value?: Int64 | Pipeline<Int64, Int64>): Int64 -> Int64
+        variant(value?: Float32 | Pipeline<Float32, Float32>): Float32 -> Float32
+        variant(value?: Float | Pipeline<Float, Float>): Float -> Float
+        variant(value?: Decimal | Pipeline<Decimal, Decimal>): Decimal -> Decimal
+    }
+
+    /// @name Mul
+    /// Multiply a numeric value 
+    declare pipeline item mul {
+        variant(value?: Int | Pipeline<Int, Int>): Int -> Int
+        variant(value?: Int64 | Pipeline<Int64, Int64>): Int64 -> Int64
+        variant(value?: Float32 | Pipeline<Float32, Float32>): Float32 -> Float32
+        variant(value?: Float | Pipeline<Float, Float>): Float -> Float
+        variant(value?: Decimal | Pipeline<Decimal, Decimal>): Decimal -> Decimal
+    }
+
+    /// @name Div
+    /// Divide a numeric value 
+    declare pipeline item div {
+        variant(value?: Int | Pipeline<Int, Int>): Int -> Int
+        variant(value?: Int64 | Pipeline<Int64, Int64>): Int64 -> Int64
+        variant(value?: Float32 | Pipeline<Float32, Float32>): Float32 -> Float32
+        variant(value?: Float | Pipeline<Float, Float>): Float -> Float
+        variant(value?: Decimal | Pipeline<Decimal, Decimal>): Decimal -> Decimal
+    }
+
+    /// @name Mod
+    /// Mod a numeric value 
+    declare pipeline item mod {
+        variant(value?: Int | Pipeline<Int, Int>): Int -> Int
+        variant(value?: Int64 | Pipeline<Int64, Int64>): Int64 -> Int64
+    }
+
+    /// @name Floor
+    /// Get the floor value
+    declare pipeline item floor {
+        variant: Float32 -> Float32
+        variant: Float -> Float
+        variant: Decimal -> Decimal
+    }
+
+    /// @name Ceil
+    /// Get the ceil value
+    declare pipeline item ceil {
+        variant: Float32 -> Float32
+        variant: Float -> Float
+        variant: Decimal -> Decimal
+    }
+
+    /// @name Round
+    /// Get the rounded value
+    declare pipeline item round {
+        variant: Float32 -> Float32
+        variant: Float -> Float
+        variant: Decimal -> Decimal
+    }
+
+    /// @name Square Root
+    /// Get the square root value
+    declare pipeline item sqrt {
+        variant: Int -> Int
+        variant: Int64 -> Int64
+        variant: Float32 -> Float32
+        variant: Float -> Float
+        variant: Decimal -> Decimal
+    }
+
+    /// @name Cube Root
+    /// Get the cube root value
+    declare pipeline item cbrt {
+        variant: Int -> Int
+        variant: Int64 -> Int64
+        variant: Float32 -> Float32
+        variant: Float -> Float
+        variant: Decimal -> Decimal
+    }
+
+    /// @name Absolute Value
+    /// Get the absolute value
+    declare pipeline item abs {
+        variant: Int -> Int
+        variant: Int64 -> Int64
+        variant: Float32 -> Float32
+        variant: Float -> Float
+        variant: Decimal -> Decimal
+    }
+
+    /// @name Power
+    /// Get the power value
+    declare pipeline item pow {
+        variant(value?: Int | Pipeline<Int, Int>): Int -> Int
+        variant(value?: Int | Pipeline<Int64, Int>): Int64 -> Int64
+        variant(value?: Int | Pipeline<Float32, Int>): Float32 -> Float32
+        variant(value?: Int | Pipeline<Float, Int>): Float -> Float
+    }
+
+    /// @name Root
+    /// Get the root value
+    declare pipeline item root {
+        variant(value?: Int | Pipeline<Int, Int>): Int -> Int
+        variant(value?: Int | Pipeline<Int64, Int>): Int64 -> Int64
+    }
+
+    /// @name Min
+    /// If current value is less than `value`, set the value to `value`
+    declare pipeline item min {
+        variant(value?: Int | Pipeline<Int, Int>): Int -> Int
+        variant(value?: Int64 | Pipeline<Int64, Int64>): Int64 -> Int64
+        variant(value?: Float32 | Pipeline<Float32, Float32>): Float32 -> Float32
+        variant(value?: Float | Pipeline<Float, Float>): Float -> Float
+        variant(value?: Decimal | Pipeline<Decimal, Decimal>): Decimal -> Decimal
+    }
+
+    /// @name Max
+    /// If current value is greater than `value`, set the value to `value`
+    declare pipeline item max {
+        variant(value?: Int | Pipeline<Int, Int>): Int -> Int
+        variant(value?: Int64 | Pipeline<Int64, Int64>): Int64 -> Int64
+        variant(value?: Float32 | Pipeline<Float32, Float32>): Float32 -> Float32
+        variant(value?: Float | Pipeline<Float, Float>): Float -> Float
+        variant(value?: Decimal | Pipeline<Decimal, Decimal>): Decimal -> Decimal
+    }
+
+    /// @name Is Even
+    /// throws if current value is not even
+    declare pipeline item isEven {
+        variant: Int -> Int
+        variant: Int64 -> Int64
+    }
+
+    /// @name Is Odd
+    /// throws if current value is not odd
+    declare pipeline item isOdd {
+        variant: Int -> Int
+        variant: Int64 -> Int64
+    }
+
+    /// @name randomInt
+    /// generate a random integer
+    declare pipeline item randomInt {
+        variant(range?: Range<Int>): Ignored -> Int
+        variant(length?: Int): Ignored -> Int
+    }
+
+    /// @name randomFloat
+    /// generate a random float
+    declare pipeline item randomFloat(range?: Range<Float>): Ignored -> Float
+
+    /// @name CUID
+    /// generate a CUID
+    declare pipeline item cuid: Ignored -> String
+
+    /// @name CUID2
+    /// generate a CUID2
+    declare pipeline item cuid2: Ignored -> String
+
+    /// @name UUID
+    /// generate a UUID
+    declare pipeline item uuid: Ignored -> String
+
+    /// @name slug
+    /// generate a slug
+    declare pipeline item slug: Ignored -> String
+
+    /// @name Random Digits
+    /// generate a random digits string
+    declare pipeline item randomDigits(len?: Int): Ignored -> String
+
+    /// @name Ellipsis
+    /// truncate string with ellipsis
+    declare pipeline item ellipsis(ellipsis?: String, width?: Int | Pipeline<String, Int>): String -> String
+
+    declare pipeline item padEnd(width?: Int | Pipeline<String, Int>, char?: String): String -> String
+
+    declare pipeline item padStart(width?: Int | Pipeline<String, Int>, char?: String): String -> String
+
+    declare pipeline item regexReplace(format?: Regex, substitute?: String): String -> String
+
+    declare pipeline item split(separator?: String | Pipeline<String, String>): String -> String[]
+
+    declare pipeline item trim: String -> String
+
+    declare pipeline item toWordCase: String -> String
+
+    declare pipeline item toLowerCase: String -> String
+
+    declare pipeline item toUpperCase: String -> String
+
+    declare pipeline item toSentenceCase: String -> String
+
+    declare pipeline item toTitleCase: String -> String
+
+    declare pipeline item hasPrefix(prefix?: String | Pipeline<String, String>): String -> String
+
+    declare pipeline item hasSuffix(suffix?: String | Pipeline<String, String>): String -> String
+
+    declare pipeline item isPrefixOf(value?: String | Pipeline<String, String>): String -> String
+
+    declare pipeline item isSuffixOf(value?: String | Pipeline<String, String>): String -> String
+
+    declare pipeline item isAlphabetic: String -> String
+
+    declare pipeline item isAlphanumeric: String -> String
+
+    declare pipeline item isEmail: String -> String
+
+    declare pipeline item isHexColor: String -> String
+
+    declare pipeline item isNumeric: String -> String
+
+    declare pipeline item isSecurePassword: String -> String
+
+    declare pipeline item regexMatch(regex?: Regex): String -> String
+
+    declare pipeline item identity<T>: Ignored -> T? where T: Model
+
+    declare pipeline item print<T>(label?: String?): T -> T
+
+    declare pipeline item bcryptSalt: String -> String
+
+    declare pipeline item bcryptVerify(pipeline?: Pipeline<String, String>): String -> String
+
+    declare pipeline item presents<T>: T? -> T
+
+    declare pipeline item when<T>(action?: Action, pipeline?: Pipeline<T, T>): T -> T
+
+    declare pipeline item append {
+        variant(value?: String | Pipeline<String, String>): String -> String
+        variant<T>(value?: T | Pipeline<T[], T>): T[] -> T[]
+    }
+
+    declare pipeline item prepend {
+        variant(value?: String | Pipeline<String, String>): String -> String
+        variant<T>(value?: T | Pipeline<T[], T>): T[] -> T[]
+    }
+
+    declare pipeline item getLength {
+        variant: String -> Int
+        variant<T>: T[] -> Int
+    }
+
+    declare pipeline item hasLength {
+        variant(len?: Int): String -> Int
+        variant(range?: Range<Int>): String -> Int
+        variant<T>(len?: Int): T[] -> Int
+        variant<T>(range?: Range<Int>): T[] -> Int
+    }
+
+    declare pipeline item reverse {
+        variant: String -> String
+        variant<T>: T[] -> T[]
+    }
+
+    declare pipeline item truncate {
+        variant(maxLen?: Int | Pipeline<String, Int>): String -> String
+        variant<T>(maxLen?: Int | Pipeline<T[], Int>): T[] -> T[]
+    }
+
+    declare pipeline item now: Ignored -> DateTime
+
+    declare pipeline item today<T>(tz?: Int | Pipeline<T, Int>): T -> Date
+
+    declare pipeline item toDate(tz?: Int | Pipeline<DateTime, Int>): DateTime -> Date
+
+    /// @name Valid
+    /// This pipeline item is always valid
+    declare pipeline item valid<T>: T -> T
+
+    declare pipeline item invalid<T>: T -> T
+
+    /// @name Passed
+    /// When `pipeline` doesn't throw, returns true
+    declare pipeline item passed<T>(pipeline?: Pipeline<T, Ignored>): T -> Bool
+
+    declare pipeline item if<T, U, V>(cond?: Pipeline<T, U>, then?: Pipeline<U, V>?, else: Pipeline<T, V>?): T -> V
+
+    declare pipeline item validate<T>(pipeline?: Pipeline<T, Ignored>): T -> T
+
+    // or, and, not, all, any
+
+    /// @name Self
+    /// Get the current pipeline context object
+    declare pipeline item self: Ignored -> Self
+
+    /// @name Set
+    /// Set the value on object or map
+    declare pipeline item set {
+        variant<T, K>(key?: K, value?: T[K]): T -> T where K: ModelScalarFields<T>, T: Model
+        variant<T>(key?: String, value?: T): Dictionary<T> -> Dictionary<T>
+    }
+
+    /// @name Get
+    /// Get the value on object or map
+    declare pipeline item get {
+        variant<T, K>(key?: K): T -> T[K]? where K: ModelScalarFields<T>, T: Model
+        variant<T>(key?: String): Dictionary<T> -> T?
+    }
+
+    /// @name Previous
+    /// Get the previous object value
+    declare pipeline item previous<T, K>(key?: K): T -> T[K]? where K: ModelScalarFields<T>, T: Model
+
+    /// @name Assign
+    /// Assign value to key on context object
+    declare pipeline item assign<T, K>(key?: K, value?: T[K] | Pipeline<T, T[K]>): T -> T where K: ModelScalarFields<Self>
+
+    // isA, is
+
+    /// @name Equal
+    /// Valid if input is equal to rhs
+    declare pipeline item eq<T>(rhs: T | Pipeline<T, T>): T -> T
+
+    /// @name Greater Than
+    /// Valid if input is greater than or equal to rhs
+    declare pipeline item gt<T>(rhs: T | Pipeline<T, T>): T -> T
+
+    // // value
+    // objects.insert("gte".to_owned(), gte);
+    // objects.insert("exists".to_owned(), exists);
+    // objects.insert("isFalse".to_owned(), is_false);
+    // objects.insert("isNull".to_owned(), is_null);
+    // objects.insert("isTrue".to_owned(), is_true);
+    // objects.insert("lt".to_owned(), lt);
+    // objects.insert("lte".to_owned(), lte);
+    // objects.insert("neq".to_owned(), neq);
+    // objects.insert("oneOf".to_owned(), one_of);
+    // // vector
+    // objects.insert("join".to_owned(), join);
+    // objects.insert("at".to_owned(), item_at);
+    // objects.insert("filter".to_owned(), filter);
+    // objects.insert("map".to_owned(), map);
+
+    /// @name Data
+    /// This interface is common for action output
+    interface Data<T> {
+        data: T
+    }
+
+    /// @name Data and Meta
+    /// This interface is common for action output with meta information
+    interface DataMeta<T, U> {
+        data: T
+        meta: U
+    }
+}

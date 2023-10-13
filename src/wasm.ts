@@ -23,6 +23,7 @@ import {
     Position,
 } from 'vscode-languageserver'
 import type { TextDocument } from 'vscode-languageserver-textdocument'
+import path from 'path'
 
 export function removeCachedSchema(uri: string) {
     remove_cached_schema(uri)
@@ -92,8 +93,9 @@ export function findDefinitionsAtPosition(uri: string, position: Position): Loca
     const sanitizedUri = uri.replace('file://', '')
     const results: TeoDefinition[] = find_definitions(sanitizedUri, [position.line + 1, position.character + 1])
     return results.map((result) => {
+        console.log(result)
         return LocationLink.create(
-            result.path, 
+            result.path === "(builtin)std.teo" ? path.join(__dirname, "../dumps/builtin/std.teo") : result.path,  
             Range.create(
                 Position.create(result.target_span.start_position[0] - 1, result.target_span.start_position[1] - 1),
                 Position.create(result.target_span.end_position[0] - 1, result.target_span.end_position[1] - 1)
@@ -111,7 +113,6 @@ export function findDefinitionsAtPosition(uri: string, position: Position): Loca
 }
 
 export function completionItemsAtPosition(uri: string, position: Position, documents: TextDocument[]): CompletionItem[] {
-    console.log(position)
     const unsavedFiles: {[key: string]: string} = {};
     documents.map((document) => {
         unsavedFiles[document.uri.replace('file://', '')] = document.getText()

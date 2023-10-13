@@ -8,12 +8,12 @@
   "main": "./dist/src/index.js",
   "typings": "dist/src/index",
   "scripts": {
-    "build": "tsc"
+    "build": "./build.sh"
   },
   "author": "Victor Teo",
   "license": "Apache-2.0",
   "dependencies": {
-    "@teocloud/teo-language-server-wasm": "^0.0.12",
+    "@teocloud/teo-language-server-wasm": "../teo-language-server-wasm/pkg",
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.11"
   },
