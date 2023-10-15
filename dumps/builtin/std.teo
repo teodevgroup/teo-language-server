@@ -697,7 +697,7 @@ namespace std {
 
     declare pipeline item regexMatch(regex?: Regex): String -> String
 
-    declare pipeline item identity<T>: Ignored -> T? where T: Model
+    declare pipeline item identity: Ignored -> Any?
 
     declare pipeline item print<T>(label?: String?): T -> T
 
@@ -771,14 +771,16 @@ namespace std {
     /// Set the value on object or map
     declare pipeline item set {
         variant<T, K>(key?: K, value?: T[K]): T -> T where K: ModelScalarFields<T>, T: Model
-        variant<T>(key?: String, value?: T): Dictionary<T> -> Dictionary<T>
+        variant<T>(key?: String, value?: T): T{} -> T{}
+        variant<T>(key?: Int): T[] -> T[]
     }
 
     /// @name Get
     /// Get the value on object or map
     declare pipeline item get {
         variant<T, K>(key?: K): T -> T[K]? where K: ModelScalarFields<T>, T: Model
-        variant<T>(key?: String): Dictionary<T> -> T?
+        variant<T>(key?: String): T{} -> T?
+        variant<T>(key?: Int): T[] -> T?
     }
 
     /// @name Previous
@@ -789,31 +791,57 @@ namespace std {
     /// Assign value to key on context object
     declare pipeline item assign<T, K>(key?: K, value?: T[K] | Pipeline<T, T[K]>): T -> T where K: ModelScalarFields<Self>
 
-    // isA, is
-
     /// @name Equal
     /// Valid if input is equal to rhs
     declare pipeline item eq<T>(rhs: T | Pipeline<T, T>): T -> T
 
     /// @name Greater Than
-    /// Valid if input is greater than or equal to rhs
+    /// Valid if input is greater than rhs
     declare pipeline item gt<T>(rhs: T | Pipeline<T, T>): T -> T
 
-    // // value
-    // objects.insert("gte".to_owned(), gte);
-    // objects.insert("exists".to_owned(), exists);
-    // objects.insert("isFalse".to_owned(), is_false);
-    // objects.insert("isNull".to_owned(), is_null);
-    // objects.insert("isTrue".to_owned(), is_true);
-    // objects.insert("lt".to_owned(), lt);
-    // objects.insert("lte".to_owned(), lte);
-    // objects.insert("neq".to_owned(), neq);
-    // objects.insert("oneOf".to_owned(), one_of);
-    // // vector
-    // objects.insert("join".to_owned(), join);
-    // objects.insert("at".to_owned(), item_at);
-    // objects.insert("filter".to_owned(), filter);
-    // objects.insert("map".to_owned(), map);
+    /// @name Greater Than Or Equal
+    /// Valid if input is greater than or equal to rhs
+    declare pipeline item gte<T>(rhs: T | Pipeline<T, T>): T -> T
+
+    /// @name less Than
+    /// Valid if input is less than rhs
+    declare pipeline item lt<T>(rhs: T | Pipeline<T, T>): T -> T
+
+    /// @name less Than Or Equal
+    /// Valid if input is less than or equal to rhs
+    declare pipeline item lte<T>(rhs: T | Pipeline<T, T>): T -> T
+
+    /// @name Not Equal
+    /// Valid if input is not equal to rhs
+    declare pipeline item neq<T>(rhs: T | Pipeline<T, T>): T -> T
+
+    /// @name Is False
+    /// Valid if input is false
+    declare pipeline item isFalse: Bool -> Bool
+
+    /// @name Is True
+    /// Valid if input is true
+    declare pipeline item isTrue: Bool -> Bool
+
+    /// @name Is Null
+    /// Valid if input is null
+    declare pipeline item isNull<T>: T? -> T?
+
+    /// @name One Of
+    /// Valid if input is one of candidates
+    declare pipeline item oneOf<T>(candidates?: T[] | Pipeline<T, T[]>): T -> T
+
+    /// @name Join
+    /// Join string array into a string with separator
+    declare pipeline item join(separator?: String | Pipeline<String[], String>): String[] -> String
+
+    /// @name Filter
+    /// Filter items by pipeline
+    declare pipeline item filter<T>(pipeline?: Pipeline<T, Ignored>): T[] -> T[]
+
+    /// @name Map
+    /// Perform map and collect results on array
+    declare pipeline item map<T, U>(pipeline?: Pipeline<T, U>): T[] -> U[]
 
     /// @name Data
     /// This interface is common for action output
