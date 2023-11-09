@@ -162,7 +162,7 @@ namespace std {
     }
 
     #if available(mysql)
-    interface enum DatabaseType {
+    interface enum MySQLDatabaseType {
         varChar(len?: Int)
         text
         char(len?: Int)
@@ -180,7 +180,7 @@ namespace std {
         double
         decimal(precision?: Int, scale?: Int)
         dateTime(len?: Int)
-        date(len?: Int)
+        date
         time(len?: Int)
         timestamp(len?: Int)
         json
@@ -194,7 +194,7 @@ namespace std {
     #end
 
     #if available(postgres)
-    interface enum DatabaseType {
+    interface enum PostgreSQLDatabaseType {
         text
         char(len?: Int)
         varChar(len?: Int)
@@ -225,7 +225,7 @@ namespace std {
     #end
 
     #if available(sqlite)
-    interface enum DatabaseType {
+    interface enum SQLiteDatabaseType {
         text
         integer
         real
@@ -235,7 +235,7 @@ namespace std {
     #end    
 
     #if available(mongo)
-    interface enum DatabaseType {
+    interface enum MongoDBDatabaseType {
         string
         bool
         int
@@ -247,12 +247,12 @@ namespace std {
     }
     #end 
 
-    enum TestResetDatasetsConfig {
+    interface enum ResetDatasets {
         auto
-        names(names?: String[])
+        dataSets(names?: DataSet[])
     }
 
-    enum Method {
+    interface enum Method {
         get
         post
         put
@@ -316,6 +316,7 @@ namespace std {
         gitCommit: Bool?
     }
 
+    #if available(database)
     declare config debug {
         logQueries: Bool?
         logMigrations: Bool?
@@ -325,24 +326,27 @@ namespace std {
     declare config test {
         resetAfterQuery: Bool?
         resetAfterMutation: Bool?
-        resetDatasets: TestResetDatasetsConfig?
+        resetDataSets: ResetDatasets?
     }
+    #end
+
+    #if available(database)
 
     /// @name Map
     /// Specify an underlying database table name for the model
-    declare unique model decorator map(table_name?: String)
+    declare unique model decorator map(tableName?: String)
 
     /// @name Id
     /// Specify the model's primary index
-    declare unique model decorator id(fields?: ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self> | ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self>[], map?: String?)
+    declare unique model decorator id(fields?: ModelSerializableScalarFields<Self>[], map?: String?)
 
     /// @name Index
     /// Add an index to the model
-    declare model decorator index(fields?: ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self> | ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self>[], map?: String?)
+    declare model decorator index(fields?: ModelSerializableScalarFields<Self>[], map?: String?)
 
     /// @name Unique
     /// Add a unique constraint to the model
-    declare model decorator unique(fields?: ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self> | ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self>[], map?: String?)
+    declare model decorator unique(fields?: ModelSerializableScalarFields<Self>[], map?: String?)
 
     /// @name Migration
     /// Specify the migration operations for the model
@@ -370,44 +374,55 @@ namespace std {
     /// @name Can Mutate
     declare unique model decorator canWrite(pipeline?: Pipeline<Self, Ignored>)
 
-    /// @name Disable
+    /// @name Action
     /// Specify disabled actions
-    declare unique model decorator disable(actions?: Action)
+    declare unique model decorator action {
+        variant(enable?: (Enumerable<Action>))
+        variant(disable: (Enumerable<Action>))
+    }
 
-    /// @name Identity
-    /// Specify whether the model is used as identity
-    declare unique model decorator identity
+    /// @name Generate Client
+    /// Specify whether generate client for this model
+    declare unique model decorator generateClient(generate?: Bool)
 
-    /// @name Internal
-    /// Specify the model is internal
-    declare unique model decorator internal
+    /// @name Generate Entity
+    /// Specify whether generate entity for this model
+    declare unique model decorator generateEntity(generate?: Bool)
+
+    /// @name Show in Studio
+    /// Specify whether show this model in Teo Studio
+    declare unique model decorator showInStudio(show?: Bool)
+
+    /// @name Synthesize Shapes
+    /// Whether automatically synthesize shapes for this model
+    declare unique model decorator synthesizeShapes(synthesize?: Bool)
 
     /// @name Map
     /// Specify an underlying database column name for the model field
-    declare unique model field decorator map(table_name?: String)
+    declare unique model field decorator map(columnName?: String)
 
     #if available(mysql)
     /// @name Database Type
     /// Specify an underlying database type for the model field
-    declare unique model field decorator db(type?: DatabaseType)
+    declare unique model field decorator db(type?: MySQLDatabaseType)
     #end
 
     #if available(postgres)
     /// @name Database Type
     /// Specify an underlying database type for the model field
-    declare unique model field decorator db(type?: DatabaseType)
+    declare unique model field decorator db(type?: PostgreSQLDatabaseType)
     #end
 
     #if available(sqlite)
     /// @name Database Type
     /// Specify an underlying database type for the model field
-    declare unique model field decorator db(type?: DatabaseType)
+    declare unique model field decorator db(type?: SQLiteDatabaseType)
     #end
 
     #if available(mongo)
     /// @name Database Type
     /// Specify an underlying database type for the model field
-    declare unique model field decorator db(type?: DatabaseType)
+    declare unique model field decorator db(type?: MongoDBDatabaseType)
     #end
 
     /// @name Readonly
@@ -448,11 +463,11 @@ namespace std {
 
     /// @name Present With
     /// Specify when some other field are not null, this field is required
-    declare unique model field decorator presentWith(fields?: ModelScalarFields<Self> | ModelScalarFields<Self>[])
+    declare unique model field decorator presentWith(fields?: Enumerable<ModelScalarFields<Self>>)
 
     /// @name Present Without
     /// Specify when some other field are null, this field is required
-    declare unique model field decorator presentWithout(fields?: ModelScalarFields<Self> | ModelScalarFields<Self>[])
+    declare unique model field decorator presentWithout(fields?: Enumerable<ModelScalarFields<Self>>)
 
     /// @name Present If
     /// Specify when some condition passes, this field is required
@@ -494,13 +509,21 @@ namespace std {
     /// When generating clients, the outout is always optional
     declare unique model field decorator outputOmissible
 
+    #if available(mongo)
+
     /// @name Auto
     /// The field value is automatically set by the underlying database
     declare unique model field decorator auto
 
+    #end
+
+    #if available(sql)
+
     /// @name Auto Increment
     /// The field value is a serial number automatically set by the underlying database
     declare unique model field decorator autoIncrement
+
+    #end
 
     /// @name Default
     /// Specify a default value for this field
@@ -521,14 +544,6 @@ namespace std {
     /// @name On Output
     /// This pipeline is triggered on output
     declare unique model field decorator onOutput(pipeline?: Pipeline<ThisFieldType, ThisFieldType>)
-
-    /// @name Auth Identity
-    /// This field is used as auth identity
-    declare unique model field decorator authIdentity
-
-    /// @name Auth By
-    /// This field is used as signing in identity checker
-    declare unique model field decorator authBy(pipeline?: Pipeline<ThisFieldType, Ignored>)
 
     /// @name Queryable
     /// This field can be queried by the client
@@ -557,7 +572,7 @@ namespace std {
     /// @name Migration
     /// Specify the migration operation for this field
     declare unique model field decorator migration(
-        renamed: (String | Array<String>)?, 
+        renamed: Enumerable<String>?, 
         version: String?, 
         default: ThisFieldType?,
         priority: Int?
@@ -571,9 +586,9 @@ namespace std {
     /// Define a model relation
     declare unique model relation decorator relation {
         /// Define a normal relation
-        variant(fields: ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self> | ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<Self>[], references: ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<ThisFieldType> | ModelScalarFieldsAndCachedPropertiesWithoutVirtuals<ThisFieldType>[])
+        variant(fields: Enumerable<ModelSerializableScalarFields<Self>>, references: Enumerable<ModelSerializableScalarFields<ThisFieldType>>)
         /// Define a through relation
-        variant(through: Model, local: ModelDirectRelations<Self>, foreign: ModelDirectRelations<ThisFieldType>)
+        variant<T>(through: T, local: ModelDirectRelations<T>, foreign: ModelDirectRelations<T>) where T: Model
     }
 
     /// @name Getter
@@ -590,7 +605,7 @@ namespace std {
 
     /// @name Dependencies
     /// Define dependencies for a cached property
-    declare unique model property decorator deps(deps?: ModelScalarFieldsWithoutVirtuals<Self> | ModelScalarFieldsWithoutVirtuals<Self>[])
+    declare unique model property decorator deps(deps?: Enumerable<ModelSerializableScalarFields<Self>>)
 
     /// @name Index
     /// Define index for this cached property
@@ -600,13 +615,17 @@ namespace std {
     /// Define unique index for this cached property
     declare unique model property decorator unique(sort: Sort?, length: Int?, map: String?)
 
+    #end
+
     /// @name Method
     /// Specify an HTTP method for this handler
     declare unique handler decorator method(method?: Method)
 
     /// @name Path
     /// Specify a path for this handler
-    declare unique handler decorator path(path?: String, ignoreNamespacePrefix: Bool?)
+    declare unique handler decorator path(path?: String, ignorePrefix: Bool?)
+
+    #if available(database)
 
     /// @name Add
     /// Add a new numeric value 
@@ -982,6 +1001,8 @@ namespace std {
     /// Perform map and collect results on array
     declare pipeline item map<T, U>(pipeline?: Pipeline<T, U>): T[] -> U[]
 
+    #end
+
     /// @name Data
     /// This interface is common for action output
     interface Data<T> {
@@ -995,7 +1016,222 @@ namespace std {
         meta: U
     }
 
-    @internal
+    #if available(database)
+
+    interface BoolFilter {
+        equals: Bool?
+        not: (Bool | BoolFilter)?
+    }
+
+    interface BoolNullableFilter {
+        equals: (Bool | Null)?
+        not: (Bool | Null | BoolNullableFilter)?
+    }
+
+    interface Filter<T> {
+        equals: T?
+        in: T[]?
+        notIn: T[]?
+        lt: T?
+        lte: T?
+        gt: T?
+        gte: T?
+        not: (T | Filter<T>)?
+    }
+
+    interface NullableFilter<T> {
+        equals: (T | Null)?
+        in: (T | Null)[]?
+        notIn: (T | Null)[]?
+        lt: T?
+        lte: T?
+        gt: T?
+        gte: T?
+        not: (T | Null | NullableFilter<T>)?
+    }
+
+    interface StringFilter {
+        equals: String?
+        in: String[]?
+        notIn: String[]?
+        lt: String?
+        lte: String?
+        gt: String?
+        gte: String?
+        contains: String?
+        startsWith: String?
+        endsWith: String?
+        matches: String?
+        not: (String | StringFilter)?
+    }
+
+    interface StringNullableFilter {
+        equals: (String | Null)?
+        in: (String | Null)[]?
+        notIn: (String | Null)[]?
+        lt: String?
+        lte: String?
+        gt: String?
+        gte: String?
+        contains: String?
+        startsWith: String?
+        endsWith: String?
+        matches: String?
+        not: (String | Null | StringNullableFilter)?
+    }
+
+    interface EnumFilter<T> {
+        equals: T?
+        in: T[]?
+        notIn: T[]?
+        not: (T | EnumFilter<T>)?
+    }
+
+    interface EnumNullableFilter<T> {
+        equals: (T | Null)?
+        in: (T | Null)[]?
+        notIn: (T | Null)[]?
+        not: (T | Null | EnumNullableFilter<T>)?
+    }
+
+    interface ArrayFilter<T> {
+        equals: T[]?
+        has: T?
+        hasSome: T[]?
+        hasEvery: T[]?
+        isEmpty: Bool?
+        length: Int?
+    }
+
+    interface ArrayNullableFilter<T> {
+        equals: (T[] | Null)?
+        has: T?
+        hasSome: T[]?
+        hasEvery: T[]?
+        isEmpty: Bool?
+        length: Int?
+    }
+
+    interface BoolWithAggregatesFilter extends BoolFilter {
+        _count: Int64?
+        _min: BoolFilter?
+        _max: BoolFilter?
+    }
+
+    interface BoolNullableWithAggregatesFilter extends BoolNullableFilter {
+        _count: Int64?
+        _min: BoolNullableFilter?
+        _max: BoolNullableFilter?
+    }
+
+    interface IntNumberWithAggregatesFilter<T> extends Filter<T> {
+        _count: Int64?
+        _min: Filter<T>?
+        _max: Filter<T>?
+        _avg: Filter<Float>?
+        _sum: Filter<Int64>?
+    }
+
+    interface IntNumberNullableWithAggregatesFilter<T> extends NullableFilter<T> {
+        _count: Int64?
+        _min: NullableFilter<T>?
+        _max: NullableFilter<T>?
+        _avg: NullableFilter<Float>?
+        _sum: NullableFilter<Int64>?
+    }
+
+    interface FloatNumberWithAggregatesFilter<T> extends Filter<T> {
+        _count: Int64?
+        _min: Filter<T>?
+        _max: Filter<T>?
+        _avg: Filter<Float>?
+        _sum: Filter<Float>?
+    }
+
+    interface FloatNumberNullableWithAggregatesFilter<T> extends NullableFilter<T> {
+        _count: Int64?
+        _min: NullableFilter<T>?
+        _max: NullableFilter<T>?
+        _avg: NullableFilter<Float>?
+        _sum: NullableFilter<Float>?
+    }
+
+    interface DecimalWithAggregatesFilter extends Filter<Decimal> {
+        _count: Int64?
+        _min: Filter<Decimal>?
+        _max: Filter<Decimal>?
+        _avg: Filter<Decimal>?
+        _sum: Filter<Decimal>?
+    }
+
+    interface DecimalNullableWithAggregatesFilter<T> extends NullableFilter<T> {
+        _count: Int64?
+        _min: NullableFilter<Decimal>?
+        _max: NullableFilter<Decimal>?
+        _avg: NullableFilter<Decimal>?
+        _sum: NullableFilter<Decimal>?
+    }
+
+    interface AggregatesFilter<T> extends Filter<T> {
+        _count: Int64?
+        _min: Filter<T>?
+        _max: Filter<T>?
+    }
+
+    interface NullableAggregatesFilter<T> extends NullableFilter<T> {
+        _count: Int64?
+        _min: NullableFilter<T>?
+        _max: NullableFilter<T>?
+    }
+
+    interface StringWithAggregatesFilter extends StringFilter {
+        _count: Int64?
+        _min: StringFilter?
+        _max: StringFilter?
+    }
+
+    interface StringNullableWithAggregatesFilter extends StringNullableFilter {
+        _count: Int64?
+        _min: StringNullableFilter?
+        _max: StringNullableFilter?
+    }
+
+    interface EnumWithAggregatesFilter<T> extends EnumFilter<T> {
+        _count: Int64?
+        _min: EnumFilter<T>?
+        _max: EnumFilter<T>?
+    }
+
+    interface EnumNullableWithAggregatesFilter extends EnumNullableFilter<T> {
+        _count: Int64?
+        _min: EnumNullableFilter<T>?
+        _max: EnumNullableFilter<T>?
+    }
+
+    interface ArrayWithAggregatesFilter<T> extends ArrayFilter<T> {
+        _count: Int64?
+        _min: ArrayFilter<T>?
+        _max: ArrayFilter<T>?
+    }
+
+    interface ArrayNullableWithAggregatesFilter<T> extends ArrayNullableFilter<T> {
+        _count: Int64?
+        _min: ArrayNullableFilter<T>?
+        _max: ArrayNullableFilter<T>?
+    }
+
+    interface NumberAtomicUpdateOperationInput<T> {
+        increment: T?
+        decrement: T?
+        multiply: T?
+        divide: T?
+    }
+
+    interface ArrayAtomicUpdateOperationInput<T> {
+        push: T?
+    }
+
+    @generateClient(false) @generateEntity(false) @showInStudio(false) @synthesizeShapes(false)
     model DataSetRecord {
 
         @id @default($cuid)
@@ -1010,7 +1246,7 @@ namespace std {
         record: String
     }
 
-    @internal
+    @generateClient(false) @generateEntity(false) @showInStudio(false) @synthesizeShapes(false)
     model DataSetRelation {
 
         @id @default($cuid)
@@ -1030,4 +1266,6 @@ namespace std {
 
         nameB: String
     }
+
+    #end
 }
