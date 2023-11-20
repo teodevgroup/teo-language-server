@@ -1,4 +1,4 @@
-import { lint, find_definitions, remove_cached_schema, completion_items } from '@teocloud/teo-language-server-wasm'
+import { lint, find_definitions, remove_cached_schema, completion_items, format_document } from '@teocloud/teo-language-server-wasm'
 import {
     DocumentFormattingParams,
     TextEdit,
@@ -129,4 +129,14 @@ export function completionItemsAtPosition(uri: string, position: Position, docum
         }
         return item
     })
+}
+
+export function formatDocument(uri: string, documents: TextDocument[]): string {
+    const unsavedFiles: {[key: string]: string} = {};
+    documents.map((document) => {
+        unsavedFiles[document.uri.replace('file://', '')] = document.getText()
+    })
+    const sanitizedUri = uri.replace('file://', '')
+    const result = format_document(sanitizedUri, unsavedFiles)
+    return result
 }

@@ -18,10 +18,11 @@ import {
     TextDocumentSyncKind,
     LocationLink,
     Range,
+    TextEdit,
 } from 'vscode-languageserver'
 import { createConnection, IPCMessageReader, IPCMessageWriter } from 'vscode-languageserver/node'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { completionItemsAtPosition, findDefinitionsAtPosition, removeCachedSchema, validateTextDocument } from './wasm'
+import { completionItemsAtPosition, findDefinitionsAtPosition, removeCachedSchema, validateTextDocument, formatDocument } from './wasm'
 import { sanitizeUri } from './utils'
 
 /**
@@ -48,7 +49,7 @@ export function startServer(): void {
                    resolveProvider: true,
                    triggerCharacters: ['@', '"', '.'],
                 },
-                //documentFormattingProvider: true,
+                documentFormattingProvider: true,
                 //hoverProvider: true,
                 //renameProvider: true,
                 //documentSymbolProvider: true,
@@ -68,6 +69,13 @@ export function startServer(): void {
             connection.console.log('Workspace folder change event received.');
         });
     });
+
+    connection.onDocumentFormatting((params: DocumentFormattingParams) => {
+        const doc = documents.get(params.textDocument.uri)
+        if (doc) {
+            return [TextEdit.replace(Range.create(0, 0, 999999, 999999), formatDocument(sanitizeUri(params.textDocument.uri), documents.all()))]
+        }
+      })
 
     connection.onDidChangeConfiguration((_change) => {
         connection.console.info('Configuration changed.')
