@@ -47,7 +47,7 @@ export function startServer(): void {
                 definitionProvider: true,
                 completionProvider: {
                    resolveProvider: true,
-                   triggerCharacters: ['@', '"', '.'],
+                   triggerCharacters: ['@', '"', '.', '$', ':'],
                 },
                 documentFormattingProvider: true,
                 //hoverProvider: true,
