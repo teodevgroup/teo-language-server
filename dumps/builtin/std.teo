@@ -355,7 +355,7 @@ namespace std {
 
     /// @name Migration
     /// Specify the migration operations for the model
-    declare unique model decorator migration(renamed: (String | Array<String>)?, version: String?, drop: Bool?)
+    declare unique model decorator migration(renamed: Enumerable<String>?, version: String?, drop: Bool?)
 
     /// @name Before Save
     /// Specify the action to trigger before an object is saved
@@ -888,10 +888,10 @@ namespace std {
     }
 
     declare pipeline item hasLength {
-        variant(len?: Int): String -> Int
-        variant(range?: Range<Int>): String -> Int
-        variant<T>(len?: Int): T[] -> Int
-        variant<T>(range?: Range<Int>): T[] -> Int
+        variant(len?: Int): String -> String
+        variant(range?: Range<Int>): String -> String
+        variant<T>(len?: Int): T[] -> T[]
+        variant<T>(range?: Range<Int>): T[] -> T[]
     }
 
     declare pipeline item reverse {
@@ -1019,6 +1019,17 @@ namespace std {
     interface DataMeta<T, U> {
         data: T
         meta: U
+    }
+
+    interface PagingInfo {
+        count: Int64
+        numberOfPages: Int64?
+    }
+
+    interface ResponseError {
+        type: String
+        message: String
+        fields: String{} | Null
     }
 
     #if available(database)
