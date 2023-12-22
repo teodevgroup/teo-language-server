@@ -1,6 +1,6 @@
 {
   "name": "@teocloud/teo-language-server",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "TEO langauge server",
   "bin": {
     "teo-language-server": "dist/src/bin.js"
@@ -16,7 +16,7 @@
   "author": "Victor Teo",
   "license": "Apache-2.0",
   "dependencies": {
-    "@teocloud/teo-language-server-wasm": "0.0.22",
+    "@teocloud/teo-language-server-wasm": "0.0.23",
     "vscode-languageserver": "^9.0.1",
     "vscode-languageserver-textdocument": "^1.0.11"
   },
