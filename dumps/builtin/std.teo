@@ -282,8 +282,9 @@ namespace std {
         /// Deny related record to be deleted
         deny
         /// @name Default
-        /// If related record is deleted, set the foreign key to default value.
-        default(value?: ThisFieldType | Pipeline<Null, ThisFieldType>)
+        /// If related record is deleted, set the foreign keys to default values.
+        /// If any of the foreign keys doesn't have a default value, an error is raised.
+        default
     }
 
     /// @name Update
@@ -298,12 +299,16 @@ namespace std {
         /// @name Update
         /// If related record is updated, update the foreign key.
         update
+        /// @name Delete
+        /// If related record is updated, delete this record.
+        delete
         /// @name Deny
         /// Deny foreign key value of related record to be updated.
         deny
         /// @name Default
-        /// If related record is updated, set the foreign key to default value.
-        default(value?: ThisFieldType | Pipeline<Null, ThisFieldType>)
+        /// If related record is updated, set the foreign keys to default values.
+        /// If any of the foreign keys doesn't have a default value, an error is raised.
+        default
     }
 
     /// @name Connector
