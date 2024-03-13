@@ -981,6 +981,7 @@ namespace std {
     /// Set the value on object or map
     declare pipeline item set {
         variant<T, K>(key?: K, value?: T[K]): T -> T where K: ScalarFields<T>, T: Model
+        variant<T, K>(key?: K, value?: T[K]): T -> T where K: Field<T>, T: Shape
         variant<T>(key?: String, value?: T): T{} -> T{}
         variant<T>(key?: Int): T[] -> T[]
     }
@@ -989,6 +990,7 @@ namespace std {
     /// Get the value on model object, array or dictionary
     declare pipeline item get {
         variant<T, K>(key?: K): T -> T[K]? where K: ScalarFields<T>, T: Model
+        variant<T, K>(key?: K): T -> T[K]? where K: ShapeField<T>, T: Shape
         variant<T>(key?: String): T{} -> T?
         variant<T>(key?: Int): T[] -> T?
     }
@@ -1003,27 +1005,27 @@ namespace std {
 
     /// @name Equal
     /// Valid if input is equal to rhs
-    declare pipeline item eq<T>(rhs: T | Pipeline<T, T>): T -> T
+    declare pipeline item eq<T>(rhs?: T | Pipeline<T, T>): T -> T
 
     /// @name Greater Than
     /// Valid if input is greater than rhs
-    declare pipeline item gt<T>(rhs: T | Pipeline<T, T>): T -> T
+    declare pipeline item gt<T>(rhs?: T | Pipeline<T, T>): T -> T
 
     /// @name Greater Than Or Equal
     /// Valid if input is greater than or equal to rhs
-    declare pipeline item gte<T>(rhs: T | Pipeline<T, T>): T -> T
+    declare pipeline item gte<T>(rhs?: T | Pipeline<T, T>): T -> T
 
     /// @name less Than
     /// Valid if input is less than rhs
-    declare pipeline item lt<T>(rhs: T | Pipeline<T, T>): T -> T
+    declare pipeline item lt<T>(rhs?: T | Pipeline<T, T>): T -> T
 
     /// @name less Than Or Equal
     /// Valid if input is less than or equal to rhs
-    declare pipeline item lte<T>(rhs: T | Pipeline<T, T>): T -> T
+    declare pipeline item lte<T>(rhs?: T | Pipeline<T, T>): T -> T
 
     /// @name Not Equal
     /// Valid if input is not equal to rhs
-    declare pipeline item neq<T>(rhs: T | Pipeline<T, T>): T -> T
+    declare pipeline item neq<T>(rhs?: T | Pipeline<T, T>): T -> T
 
     /// @name Is False
     /// Valid if input is false
