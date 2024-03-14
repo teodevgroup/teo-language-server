@@ -971,7 +971,13 @@ namespace std {
 
     declare pipeline item validate<T>(pipeline?: Pipeline<T, Ignored>): T -> T
 
-    // or, and, not, all, any
+    // declare pipeline item all<T>(pipelines?: Pipeline<T, Ignored>[]): T -> T
+
+    // declare pipeline item any<T>(pipelines?: Pipeline<T, Ignored>[]): T -> T
+
+    declare pipeline item do<T>(pipeline?: Pipeline<T, Ignored>): T -> T
+
+    declare pipeline item not<T>(pipeline?: Pipeline<T, Ignored>): T -> T
 
     /// @name Self
     /// Get the current pipeline context object
@@ -1394,12 +1400,12 @@ namespace std {
 
         declare model field decorator companion
 
-        declare pipeline item jwt(secret: String, expired: (Int64 | Pipeline<Self, Int64>)?): Self -> String
+        declare pipeline item jwt(expired: (Int64 | Pipeline<Self, Int64>)?): Self -> String
 
         declare handler template signIn(SignInInput<Self>): DataMeta<Result<Self>, TokenInfo>
 
         declare handler template identity(Empty): Data<Result<Self>>
 
-        declare middleware identityFromJwt(secret: String)
+        declare middleware identityFromJwt(secret?: String)
     }
 }
