@@ -921,7 +921,13 @@ namespace std {
 
     // declare pipeline item identity: Ignored -> Any?
 
+    /// @name Print
+    /// Print the current pipeline ctx value for debug purpose.
     declare pipeline item print<T>(label?: String?): T -> T
+
+    /// @name Message
+    /// If error occurred, replace error message and error code if specified
+    declare pipeline item message<T, U>(pipeline?: Pipeline<T, U>, message?: String, code?: Int?): T -> U
 
     declare pipeline item presents<T>: T? -> T
 
@@ -1375,14 +1381,19 @@ namespace std {
             token: String
         }
 
+        declare synthesized shape SignInCheckerIds {
+            declare optional synthesized field with @identity.id
+        }
+
         declare synthesized shape SignInCheckerCompanions {
             declare optional synthesized field with @identity.companion
         }
 
         @generateClient(false) @generateEntity(false)
-        interface SignInCheckerArgs<T, M> {
+        interface SignInCheckerArgs<T, C, I> {
             value: T
-            companions: M
+            companions: C
+            ids: I
         }
 
         declare synthesized shape SignInInput {
@@ -1397,7 +1408,7 @@ namespace std {
             declare optional synthesized field with @identity.companion
         }
 
-        declare unique model decorator tokenIssuer(pipeline?: Pipeline<Self, String>)
+        declare unique model decorator tokenIssuer(pipeline?: Pipeline<SignInArgs<Self>, String>)
 
         declare unique model decorator validateAccount(pipeline?: Pipeline<Self, Ignored>)
 
@@ -1405,11 +1416,11 @@ namespace std {
 
         declare model field decorator id
 
-        declare model field decorator checker(pipeline?: Pipeline<SignInCheckerArgs<ThisFieldType, SignInCheckerCompanions<Self>>, Ignored>)
+        declare model field decorator checker(pipeline?: Pipeline<SignInCheckerArgs<ThisFieldType, SignInCheckerCompanions<Self>, SignInCheckerIds<Self>>, Ignored>)
 
         declare model field decorator companion
 
-        declare pipeline item jwt(expired: (Int64 | Pipeline<Self, Int64>)?): Self -> String
+        declare pipeline item jwt(expired: (Int64 | Pipeline<SignInArgs<Self>, Int64>)?): SignInArgs<Self> -> String
 
         declare handler template signIn(SignInInput<Self>): DataMeta<Result<Self>, TokenInfo>
 
