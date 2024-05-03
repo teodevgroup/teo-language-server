@@ -1353,6 +1353,7 @@ namespace std {
     }
 
     @generateClient(false) @generateEntity(false) @showInStudio(false) @synthesizeShapes(false)
+    @admin.ignore
     model DataSetRecord {
 
         @id @default($cuid)
@@ -1368,6 +1369,7 @@ namespace std {
     }
 
     @generateClient(false) @generateEntity(false) @showInStudio(false) @synthesizeShapes(false)
+    @admin.ignore
     model DataSetRelation {
 
         @id @default($cuid)
@@ -1483,6 +1485,10 @@ namespace std {
         /// Use this model as a administrator in admin dashboard
         declare model decorator administrator
 
+        /// @name Ignore
+        /// Ignore this model in admin dashboard
+        declare model decorator ignore
+
         /// @name Title
         /// Use this field as a record's title in admin dashboard
         declare model field decorator title
@@ -1494,6 +1500,10 @@ namespace std {
         /// @name Cover Image
         /// Use this field as a record's cover image in admin dashboard
         declare model field decorator coverImage
+
+        /// @name Secure Input
+        /// Treat this field's input as secure input in admin dashboard
+        declare model field decorator secureInput
 
         /// @name Embedded
         /// The related object or objects display in this model's form
