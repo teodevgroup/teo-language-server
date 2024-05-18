@@ -1,6 +1,6 @@
 {
   "name": "@teocloud/teo-language-server",
-  "version": "0.2.18",
+  "version": "0.2.19",
   "description": "TEO langauge server",
   "bin": {
     "teo-language-server": "dist/src/bin.js"

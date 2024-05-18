@@ -49,7 +49,7 @@ export function startServer(): void {
                    resolveProvider: true,
                    triggerCharacters: ['@', '"', '.', '$', ':'],
                 },
-                documentFormattingProvider: true,
+                documentFormattingProvider: false,
                 //hoverProvider: true,
                 //renameProvider: true,
                 //documentSymbolProvider: true,
@@ -70,12 +70,12 @@ export function startServer(): void {
         });
     });
 
-    connection.onDocumentFormatting((params: DocumentFormattingParams) => {
-        const doc = documents.get(params.textDocument.uri)
-        if (doc) {
-            return [TextEdit.replace(Range.create(0, 0, 999999, 999999), formatDocument(sanitizeUri(params.textDocument.uri), documents.all()))]
-        }
-      })
+    // connection.onDocumentFormatting((params: DocumentFormattingParams) => {
+    //     const doc = documents.get(params.textDocument.uri)
+    //     if (doc) {
+    //         return [TextEdit.replace(Range.create(0, 0, 999999, 999999), formatDocument(sanitizeUri(params.textDocument.uri), documents.all()))]
+    //     }
+    // })
 
     connection.onDidChangeConfiguration((_change) => {
         connection.console.info('Configuration changed.')
