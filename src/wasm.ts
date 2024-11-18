@@ -1,4 +1,4 @@
-import { lint, find_definitions, remove_cached_schema, completion_items, format_document } from '@teocloud/teo-language-server-wasm'
+import { lint, find_definitions, remove_cached_schema, completion_items, format_document } from '@teodevgroup/teo-language-server-wasm'
 import {
     DocumentFormattingParams,
     TextEdit,
